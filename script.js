@@ -82,30 +82,63 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- Form Submission ---
     inviteForm.addEventListener('submit', async (event) => {
         event.preventDefault();
-        const invite = inviteLinkInput.value.trim();
-        if (!invite) {
-            displayMessage('Please enter an invite link or code.', 'error');
+        const invitesText = inviteLinkInput.value.trim();
+        if (!invitesText) {
+            displayMessage('Please enter at least one invite link or code.', 'error');
             return;
         }
-        displayMessage('Submitting invite...', 'info');
+
+        const inviteInputs = invitesText.split('\n').map(line => line.trim()).filter(line => line);
+
+        if (inviteInputs.length === 0) {
+            displayMessage('Please enter valid invite links or codes, one per line.', 'error');
+            return;
+        }
+
+        displayMessage(`Submitting ${inviteInputs.length} invite(s)...`, 'info');
 
         try {
+            // Extract codes before sending
+            const inviteCodes = inviteInputs.map(invite => extractInviteCode(invite)).filter(code => code); 
+
+            if (inviteCodes.length === 0) {
+                displayMessage('No valid invite codes found. Please check your input.', 'error');
+                return;
+            }
+
             const response = await fetch(`${WORKER_URL}/submit`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ inviteCode: extractInviteCode(invite) })
+                body: JSON.stringify({ inviteCodes: inviteCodes }) // Sending an array of codes
             });
             const result = await response.json();
-            if (response.ok && result.success) {
-                // Use a more specific message from the worker if available, otherwise a generic one.
-                const successMessage = result.message && result.message.includes('submitted successfully') 
-                    ? result.message + ' It may take a few minutes to appear on the list.' 
-                    : 'Server submitted successfully! It may take a few minutes to appear on the list.';
-                displayMessage(successMessage, 'success');
+            
+            // The worker needs to be updated to handle multiple codes and return appropriate responses.
+            // For now, we'll assume a generic success/error message based on the overall response.
+            if (response.ok && result.success) { 
+                let successMsg = `Successfully submitted ${inviteCodes.length} server(s). They may take a few minutes to appear on the list.`;
+                if (result.message) { // If worker returns a more specific message
+                    successMsg = result.message;
+                }
+                // Handle potential partial successes or detailed results if the worker provides them
+                if (result.results && Array.isArray(result.results)) {
+                    const successfulCount = result.results.filter(r => r.success).length;
+                    const failedCount = result.results.length - successfulCount;
+                    successMsg = `Submission attempt: ${successfulCount} successful, ${failedCount} failed.`;
+                    if (failedCount > 0) {
+                        const errorDetails = result.results.filter(r => !r.success).map(r => `${r.inviteCode}: ${r.error}`).join('; ');
+                        successMsg += ` Errors: ${errorDetails}`;
+                    }
+                    if (successfulCount > 0) {
+                         successMsg += ` Successful servers may take a few minutes to appear.`;
+                    }
+                }
+
+                displayMessage(successMsg, 'success');
                 inviteLinkInput.value = '';
-                fetchServers(); // This will call applySearch and renderServers indirectly
+                fetchServers();
             } else {
-                displayMessage(result.error || 'Submission failed. Please try again.', 'error');
+                displayMessage(result.error || `Submission failed for ${inviteCodes.length} server(s). Please try again.`, 'error');
             }
         } catch (error) {
             console.error('Submission error:', error);
