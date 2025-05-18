@@ -135,6 +135,29 @@ th, td {
     text-align: left;
     vertical-align: middle;
     white-space: nowrap; /* Prevent headers and simple content from wrapping initially */
+    position: relative; /* Ensure TH is a positioning context for handles if needed directly inside*/
+}
+
+/* Style for the span inside TH for sort clicking */
+th span {
+    display: inline-block; /* Or block, depending on desired layout */
+    padding-right: 10px; /* Space for sort icon and handle */
+}
+
+.resize-handle {
+    position: absolute;
+    top: 0;
+    right: -3px; /* Position slightly over the border */
+    width: 6px;
+    height: 100%;
+    cursor: col-resize;
+    /* background-color: rgba(100,100,255,0.3); /* For debugging visibility */
+    z-index: 10; /* Ensure it's above other header content if any overlap */
+}
+
+body.resizing-cols {
+    cursor: col-resize !important; /* Global cursor change during resize */
+    user-select: none; /* Prevent text selection during drag */
 }
 
 /* Allow description to wrap and control its width */

@@ -203,19 +203,40 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Render Headers
         const headerRow = serverTableHeader.insertRow();
-        Object.keys(allColumns).forEach(key => {
+        Object.keys(allColumns).forEach((key, index, arr) => { // Added index and arr for resize handle logic
             if (visibleColumns.has(key)) {
                 const colConfig = allColumns[key];
                 const th = document.createElement('th');
-                th.textContent = colConfig.label;
+                th.style.position = 'relative'; // For positioning resize handle
+
+                const titleSpan = document.createElement('span');
+                titleSpan.textContent = colConfig.label;
+                th.appendChild(titleSpan);
+                
                 th.dataset.sortKey = key;
-                th.classList.add(`col-${key.replace(/_/g, '-')}`); // Add class for styling th
+                th.classList.add(`col-${key.replace(/_/g, '-')}`);
                 if (colConfig.type) {
                     th.classList.add('sortable');
                     if (currentSort.key === key) {
                         th.classList.add(currentSort.direction === 'asc' ? 'sort-asc' : 'sort-desc');
                     }
-                    th.addEventListener('click', () => handleSort(key));
+                    // Event listener for sorting will be on titleSpan to avoid conflict with resize
+                    titleSpan.addEventListener('click', () => handleSort(key)); 
+                } else {
+                    // If not sortable, still make the titleSpan clickable for consistency if needed in future
+                    // or just let it be plain text.
+                }
+
+                // Add resize handle to all but the last visible column header
+                // Check if this is not the last *visible* column
+                const visibleKeys = arr.filter(k => visibleColumns.has(k));
+                const currentIndexInVisible = visibleKeys.indexOf(key);
+
+                if (currentIndexInVisible < visibleKeys.length - 1) {
+                    const resizeHandle = document.createElement('div');
+                    resizeHandle.classList.add('resize-handle');
+                    resizeHandle.addEventListener('mousedown', (e) => initResize(e, th));
+                    th.appendChild(resizeHandle);
                 }
                 headerRow.appendChild(th);
             }
@@ -419,6 +440,46 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         } catch (e) { /* ignore */ }
         return invite;
+    }
+
+    // --- Column Resizing Logic (Simplified) ---
+    let currentThToResize;
+    let startX, startWidth;
+
+    function initResize(e, th) {
+        e.stopPropagation(); // Prevent sort click when dragging handle
+        currentThToResize = th;
+        startX = e.pageX;
+        startWidth = currentThToResize.offsetWidth;
+        document.addEventListener('mousemove', handleMouseMove);
+        document.addEventListener('mouseup', stopResize);
+        // Add a class to body to indicate resizing and change cursor globally
+        document.body.classList.add('resizing-cols'); 
+    }
+
+    function handleMouseMove(e) {
+        if (!currentThToResize) return;
+        const diffX = e.pageX - startX;
+        let newWidth = startWidth + diffX;
+        const minWidth = 50; // Minimum column width
+        if (newWidth < minWidth) newWidth = minWidth;
+
+        currentThToResize.style.width = `${newWidth}px`;
+        currentThToResize.style.minWidth = `${newWidth}px`; // Ensure min-width is also set
+        currentThToResize.style.maxWidth = `${newWidth}px`; // Optional: force exact width
+
+        // Adjust corresponding cells in the body - this can be performance intensive
+        // For a simpler approach, CSS table-layout:fixed and setting width on TH might be enough
+        // but for direct manipulation like this, we might need to iterate.
+        // For now, we rely on the TH width influencing the column.
+        // More robust solutions would use a <col> element or update all cells.
+    }
+
+    function stopResize() {
+        document.removeEventListener('mousemove', handleMouseMove);
+        document.removeEventListener('mouseup', stopResize);
+        currentThToResize = null;
+        document.body.classList.remove('resizing-cols');
     }
 
     // --- Initial Load ---
