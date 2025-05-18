@@ -22,21 +22,27 @@
 
         <section id="server-list-controls">
             <h2>Server List</h2>
+            <div id="column-visibility-controls">
+                <h4>Show/Hide Columns:</h4>
+                <!-- Checkboxes will be dynamically inserted here by script.js -->
+            </div>
             <div>
-                <label for="sort-by">Sort by:</label>
-                <select id="sort-by">
-                    <option value="name">Name</option>
-                    <option value="member_count">Member Count</option>
-                    <option value="added_date">Date Added</option>
-                </select>
                 <button id="export-json">Export JSON</button>
                 <button id="export-csv">Export CSV</button>
                 <button id="export-txt">Export TXT</button>
             </div>
         </section>
 
-        <section id="server-list">
-            <!-- Server cards will be injected here by JavaScript -->
+        <section id="server-list-table-section">
+            <table id="server-table">
+                <thead>
+                    <!-- Table headers will be injected here by JavaScript -->
+                </thead>
+                <tbody>
+                    <!-- Server rows will be injected here by JavaScript -->
+                </tbody>
+            </table>
+            <p id="no-servers-message" style="display:none;">No servers listed yet. Be the first to submit one!</p>
         </section>
     </main>
     <footer>

@@ -2,13 +2,13 @@
 body {
     font-family: sans-serif;
     margin: 0;
-    background-color: #f4f4f4;
-    color: #333;
+    background-color: #121212; /* Dark background */
+    color: #e0e0e0; /* Light text */
     line-height: 1.6;
 }
 
 header {
-    background: #333;
+    background: #1e1e1e; /* Slightly lighter dark for header */
     color: #fff;
     padding: 1rem 0;
     text-align: center;
@@ -25,31 +25,39 @@ main {
 }
 
 section {
-    background: #fff;
+    background: #1e1e1e; /* Darker elements */
     margin-bottom: 1rem;
     padding: 1rem;
     border-radius: 5px;
+    border: 1px solid #333; /* Subtle border */
 }
 
 h2 {
-    color: #333;
+    color: #e0e0e0; /* Light text for headings */
 }
 
 input[type="text"], button, select {
     padding: 0.7rem;
     margin-right: 0.5rem;
-    border: 1px solid #ddd;
+    border: 1px solid #444; /* Darker borders */
     border-radius: 3px;
+    background-color: #2c2c2c; /* Dark input background */
+    color: #e0e0e0; /* Light input text */
+}
+
+input[type="text"]::placeholder {
+    color: #aaa; /* Lighter placeholder text */
 }
 
 button {
-    background: #333;
+    background: #007bff; /* Brighter button for contrast */
     color: #fff;
     cursor: pointer;
+    border: 1px solid #0056b3;
 }
 
 button:hover {
-    background: #555;
+    background: #0056b3;
 }
 
 #form-message {
@@ -62,12 +70,13 @@ button:hover {
 }
 
 .server-card {
-    border: 1px solid #ddd;
+    border: 1px solid #333;
     padding: 1rem;
     margin-bottom: 1rem;
     border-radius: 5px;
     display: flex;
     align-items: center;
+    background-color: #2c2c2c; /* Dark card background */
 }
 
 .server-card img {
@@ -79,6 +88,7 @@ button:hover {
 
 .server-info h3 {
     margin: 0 0 0.5rem 0;
+    color: #00aaff; /* Accent color for server names */
 }
 
 .server-info p {
@@ -89,23 +99,123 @@ button:hover {
 footer {
     text-align: center;
     padding: 1rem;
-    background: #333;
+    background: #1e1e1e;
     color: #fff;
     margin-top: 2rem;
 }
 
 /* Message Styling */
 .info {
-    color: blue;
+    color: #3498db; /* Light blue for info */
     font-weight: bold;
 }
 
 .success {
-    color: green;
+    color: #2ecc71; /* Light green for success */
     font-weight: bold;
 }
 
 .error {
-    color: red;
+    color: #e74c3c; /* Light red for error */
     font-weight: bold;
+}
+
+/* Table Styles */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 1rem;
+    font-size: 0.9em;
+}
+
+thead {
+    background-color: #2c2c2c; /* Darker header for table */
+}
+
+th, td {
+    padding: 0.5rem 0.75rem; /* Adjusted padding */
+    border: 1px solid #383838; /* Slightly lighter border for table elements */
+    text-align: left;
+    vertical-align: middle;
+}
+
+th.sortable {
+    cursor: pointer;
+}
+
+th.sortable:hover {
+    background-color: #3a3a3a;
+}
+
+th.sort-asc::after,
+th.sort-desc::after {
+    font-size: 0.8em;
+    margin-left: 0.3em;
+}
+
+th.sort-asc::after {
+    content: '▲';
+}
+
+th.sort-desc::after {
+    content: '▼';
+}
+
+.server-table-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    vertical-align: middle;
+    margin-right: 8px;
+    background-color: #444; /* Placeholder background for icon */
+}
+
+.join-button {
+    padding: 4px 8px; /* Smaller padding for button in table */
+    background-color: #007bff;
+    color: white;
+    text-decoration: none;
+    border-radius: 3px;
+    font-size: 0.9em;
+    display: inline-block; /* Ensures proper padding and centering if needed */
+    white-space: nowrap; /* Prevent button text from wrapping */
+}
+
+.join-button:hover {
+    background-color: #0056b3;
+}
+
+/* Column Visibility Controls */
+#column-visibility-controls {
+    padding: 0.5rem;
+    margin-bottom: 1rem;
+    background-color: #252525;
+    border: 1px solid #333;
+    border-radius: 4px;
+}
+
+#column-visibility-controls h4 {
+    margin-top: 0;
+    margin-bottom: 0.5rem;
+    font-size: 1em;
+}
+
+#column-visibility-controls label {
+    font-size: 0.85em; /* Smaller font for checkbox labels */
+    margin-right: 12px;
+    display: inline-block; /* Better layout */
+    margin-bottom: 5px; /* Spacing for wrapped labels */
+    vertical-align: middle;
+}
+
+#column-visibility-controls input[type="checkbox"] {
+    margin-right: 4px;
+    vertical-align: middle;
+}
+
+/* Ensure sections are distinct */
+#submission-form,
+#server-list-controls,
+#server-list-table-section {
+    padding: 1.5rem; /* Slightly more padding for main sections */
 } 
