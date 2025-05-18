@@ -1,0 +1,6 @@
+# Ignore Cloudflare Worker configuration and code
+worker/
+
+# Ignore OS-generated files
+.DS_Store
+Thumbs.db 

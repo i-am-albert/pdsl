@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Public Discord Server List (PDSL)</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header>
+        <h1>Public Discord Server List (PDSL)</h1>
+    </header>
+    <main>
+        <section id="submission-form">
+            <h2>Submit a Server</h2>
+            <form id="invite-form">
+                <input type="text" id="invite-link" placeholder="Enter Discord Invite Link or Code" required>
+                <button type="submit">Submit</button>
+            </form>
+            <p id="form-message"></p>
+        </section>
+
+        <section id="server-list-controls">
+            <h2>Server List</h2>
+            <div>
+                <label for="sort-by">Sort by:</label>
+                <select id="sort-by">
+                    <option value="name">Name</option>
+                    <option value="member_count">Member Count</option>
+                    <option value="added_date">Date Added</option>
+                </select>
+                <button id="export-json">Export JSON</button>
+                <button id="export-csv">Export CSV</button>
+                <button id="export-txt">Export TXT</button>
+            </div>
+        </section>
+
+        <section id="server-list">
+            <!-- Server cards will be injected here by JavaScript -->
+        </section>
+    </main>
+    <footer>
+        <p>&copy; 2024 PDSL - Hosted on GitHub Pages, powered by Cloudflare Workers.</p>
+    </footer>
+    <script src="script.js"></script>
+</body>
+</html> 
