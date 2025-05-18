@@ -7,6 +7,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const serverTableHeader = document.getElementById('server-table').getElementsByTagName('thead')[0];
     const noServersMessage = document.getElementById('no-servers-message');
     const columnVisibilityControls = document.getElementById('column-visibility-controls');
+    const searchBar = document.getElementById('search-bar'); // Added search bar
 
     const exportJsonButton = document.getElementById('export-json');
     const exportCsvButton = document.getElementById('export-csv');
@@ -15,6 +16,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const WORKER_URL = 'https://pdsl-worker.ytalberta.workers.dev';
 
     let servers = [];
+    let filteredServers = []; // For search results
     let currentSort = {
         key: 'name', // Default sort key
         direction: 'asc' // 'asc' or 'desc'
@@ -45,6 +47,38 @@ document.addEventListener('DOMContentLoaded', () => {
 
     let visibleColumns = new Set(Object.keys(allColumns).filter(key => allColumns[key].defaultVisible));
 
+    // --- Search Functionality ---
+    searchBar.addEventListener('input', () => {
+        applySearch();
+        renderServers();
+    });
+
+    function applySearch() {
+        const searchTerm = searchBar.value.toLowerCase().trim();
+        if (!searchTerm) {
+            filteredServers = [...servers];
+            return;
+        }
+
+        filteredServers = servers.filter(server => {
+            // Search in name, description, and invite_code by default
+            // Also search in any currently visible string or array type column
+            return (
+                (server.name && server.name.toLowerCase().includes(searchTerm)) ||
+                (server.description && server.description.toLowerCase().includes(searchTerm)) ||
+                (server.invite_code && server.invite_code.toLowerCase().includes(searchTerm)) ||
+                Object.keys(allColumns).some(key => 
+                    visibleColumns.has(key) && 
+                    server[key] &&
+                    (allColumns[key].type === 'string' || allColumns[key].type === 'array') &&
+                    (Array.isArray(server[key]) 
+                        ? server[key].join(' ').toLowerCase().includes(searchTerm) 
+                        : server[key].toString().toLowerCase().includes(searchTerm))
+                )
+            );
+        });
+    }
+
     // --- Form Submission ---
     inviteForm.addEventListener('submit', async (event) => {
         event.preventDefault();
@@ -65,7 +99,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (response.ok && result.success) {
                 displayMessage(result.message || 'Server submitted successfully! It will be reviewed and added.', 'success');
                 inviteLinkInput.value = '';
-                fetchServers();
+                fetchServers(); // This will call applySearch and renderServers indirectly
             } else {
                 displayMessage(result.error || 'Submission failed. Please try again.', 'error');
             }
@@ -118,8 +152,10 @@ document.addEventListener('DOMContentLoaded', () => {
             } else {
                 servers = await response.json();
             }
-            renderServers(); // Initial render after fetch
-            if (servers.length > 0) displayMessage('Server list loaded.', 'success');
+            applySearch(); // Apply search after fetching/re-fetching
+            renderServers();
+            if (filteredServers.length > 0 && servers.length > 0) displayMessage('Server list loaded.', 'success');
+            else if (servers.length === 0) displayMessage('Server list is currently empty.', 'info');
 
         } catch (error) {
             console.error('Error fetching servers:', error);
@@ -133,10 +169,17 @@ document.addEventListener('DOMContentLoaded', () => {
         serverTable.innerHTML = ''; // Clear existing rows
         serverTableHeader.innerHTML = ''; // Clear existing headers
 
-        if (!servers || servers.length === 0) {
+        const currentServerList = searchBar.value.trim() ? filteredServers : servers;
+
+        if (!currentServerList || currentServerList.length === 0) {
             noServersMessage.style.display = 'block';
             serverTable.style.display = 'none';
             serverTableHeader.style.display = 'none';
+            if (searchBar.value.trim() && servers.length > 0) {
+                noServersMessage.textContent = 'No servers match your search.';
+            } else {
+                noServersMessage.textContent = 'No servers listed yet. Be the first to submit one!';
+            }
             return;
         }
         noServersMessage.style.display = 'none';
@@ -162,7 +205,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
 
-        const sortedServers = sortServers(servers, currentSort.key, currentSort.direction);
+        const sortedServers = sortServers(currentServerList, currentSort.key, currentSort.direction);
 
         // Render Rows
         sortedServers.forEach(server => {
@@ -230,75 +273,92 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // --- Exporting ---
-    exportJsonButton.addEventListener('click', () => exportData(servers, 'json'));
-    exportCsvButton.addEventListener('click', () => exportData(servers, 'csv'));
-    exportTxtButton.addEventListener('click', () => exportData(servers, 'txt'));
+    exportJsonButton.addEventListener('click', () => exportData(filteredServers, 'json'));
+    exportCsvButton.addEventListener('click', () => exportData(filteredServers, 'csv'));
+    exportTxtButton.addEventListener('click', () => exportData(filteredServers, 'txt'));
 
     function exportData(data, format) {
         if (!data || data.length === 0) {
-            displayMessage('No data to export.', 'info');
+            displayMessage('No data to export (or no servers match current search).', 'info');
             return;
         }
-        // Use only visible columns for CSV export headers, or all for JSON/TXT
-        let dataToExport = data;
-        let exportHeaders = Object.keys(allColumns);
-
-        if (format === 'csv') {
-             exportHeaders = Object.keys(allColumns).filter(key => visibleColumns.has(key));
-             // For CSV, we might want to format the data similar to how it appears in the table
-             dataToExport = data.map(server => {
-                const row = {};
-                exportHeaders.forEach(key => {
-                    const colConfig = allColumns[key];
-                    if (colConfig.render && typeof server[key] === 'object' && key !== 'icon' && key !== 'join') { // Avoid re-rendering complex HTML
-                        row[key] = server[key]; // take raw data for objects
-                    } else if (colConfig.render) {
-                         row[key] = server[key]; // use raw for simpler ones or rely on server[key]
-                    }
-                     else {
-                        row[key] = server[key] !== undefined && server[key] !== null ? server[key].toString() : '';
-                    }
-                    if (key === 'features' && Array.isArray(server[key])) {
-                        row[key] = server[key].join(';'); // Use semicolon for array in CSV
-                    }
-                });
-                return row;
-             });
-        }
-
-
+        
+        let dataToExport = JSON.parse(JSON.stringify(data)); // Deep copy to avoid modifying original filtered/sorted data
         let content = '';
         let mimeType = '';
         let filename = `pdsl-servers.${format}`;
 
+        // Filter data for export based on visible columns for JSON and TXT
+        // CSV already uses a filtered header list later
+        if (format === 'json' || format === 'txt') {
+            dataToExport = dataToExport.map(server => {
+                const filteredServer = {};
+                Object.keys(allColumns).forEach(key => {
+                    if (visibleColumns.has(key)) {
+                        if (key === 'join') {
+                            filteredServer[key] = `https://discord.gg/${server.invite_code}`;
+                        } else {
+                            filteredServer[key] = server[key];
+                        }
+                    }
+                });
+                return filteredServer;
+            });
+        }
+
         if (format === 'json') {
-            content = JSON.stringify(data, null, 2); // Export original full data for JSON
+            content = JSON.stringify(dataToExport, null, 2);
             mimeType = 'application/json';
         } else if (format === 'csv') {
-            if (dataToExport.length > 0) {
-                const displayedHeaderLabels = exportHeaders.map(key => allColumns[key].label);
-                content = displayedHeaderLabels.join(',') + '\\n';
-                dataToExport.forEach(server => {
-                    content += exportHeaders.map(headerKey => {
-                        let val = server[headerKey];
-                        if (val === null || val === undefined) val = '';
-                        return `"${val.toString().replace(/"/g, '""')}"`;
-                    }).join(',') + '\\n';
-                });
-            }
+            const csvHeaders = Object.keys(allColumns).filter(key => visibleColumns.has(key));
+            const displayedHeaderLabels = csvHeaders.map(key => allColumns[key].label);
+            content = displayedHeaderLabels.join(',') + '\\\n';
+            
+            dataToExport.forEach(server => {
+                content += csvHeaders.map(headerKey => {
+                    let val;
+                    if (headerKey === 'join') {
+                        val = `https://discord.gg/${server.invite_code}`;
+                    } else if (allColumns[headerKey].render && typeof server[headerKey] !== 'string' && typeof server[headerKey] !== 'number' && typeof server[headerKey] !== 'boolean') {
+                        // For complex render outputs that aren't simple types, try to get a meaningful string
+                        // or just use the raw data if it's an array/object that needs special handling below
+                        if (Array.isArray(server[headerKey])) {
+                            val = server[headerKey].join('; '); // e.g. features array
+                        } else if (typeof server[headerKey] === 'object' && server[headerKey] !== null) {
+                            // If it's an object and not handled by a specific type, get a string representation
+                            // This case might need more specific handling based on actual data structure
+                            val = JSON.stringify(server[headerKey]); 
+                        } else {
+                            val = server[headerKey]; // Fallback
+                        }
+                    } else {
+                        val = server[headerKey];
+                    }
+
+                    if (allColumns[headerKey].type === 'date' && val) {
+                        val = new Date(val).toLocaleDateString();
+                    }
+
+                    if (val === null || val === undefined) val = '';
+                    return `"${val.toString().replace(/"/g, '""')}"`;
+                }).join(',') + '\\\n';
+            });
             mimeType = 'text/csv';
-        } else if (format === 'txt') { // TXT export will list all fields like before
-            const originalHeaders = Object.keys(allColumns);
-            data.forEach(server => {
-                 originalHeaders.forEach(key => {
+        } else if (format === 'txt') {
+            dataToExport.forEach(server => {
+                Object.keys(server).forEach(key => { // server object here is already filtered by visible columns
                     const colConfig = allColumns[key];
                     let value = server[key];
-                    if (key === 'features' && Array.isArray(value)) value = value.join(', ');
-                    else if (type === 'date' && value) value = new Date(value).toLocaleDateString();
-
-                    content += `${colConfig.label}: ${value !== undefined && value !== null ? value : 'N/A'}\\n`;
+                    if (colConfig.type === 'array' && Array.isArray(value)) {
+                        value = value.join(', ');
+                    } else if (colConfig.type === 'date' && value && !(value instanceof Date)) {
+                         // If it's not already a Date object (e.g. from join link creation)
+                        if (key !== 'join') value = new Date(value).toLocaleDateString(); 
+                    }
+                     // Join link is already formatted correctly
+                    content += `${colConfig.label}: ${value !== undefined && value !== null ? value : 'N/A'}\\\\n`;
                 });
-                content += `-------------------------------------\\n`;
+                content += `-------------------------------------\\\\n`;
             });
             mimeType = 'text/plain';
         }
@@ -340,7 +400,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Initial Load ---
     initializeColumnControls();
-    fetchServers();
+    fetchServers(); // This will call applySearch and then renderServers
 });
 
 // Add to style.css (some already exist, new ones for table):
