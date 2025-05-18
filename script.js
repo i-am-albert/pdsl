@@ -145,21 +145,31 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!response.ok) {
                 if (response.status === 404) {
                     servers = [];
-                    displayMessage('Server list is currently empty. Submit a server to get started!', 'info');
+                    // displayMessage('Server list is currently empty. Submit a server to get started!', 'info'); // Message handled in renderServers
                 } else {
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
             } else {
                 servers = await response.json();
             }
-            applySearch(); // Apply search after fetching/re-fetching
-            renderServers();
-            if (filteredServers.length > 0 && servers.length > 0) displayMessage('Server list loaded.', 'success');
-            else if (servers.length === 0) displayMessage('Server list is currently empty.', 'info');
+            applySearch(); // Apply search immediately after fetching/re-fetching all servers
+            renderServers(); // Then render. renderServers will use filteredServers if search is active.
+            
+            // Update status message based on whether any servers (filtered or not) are loaded.
+            if (servers.length > 0 && searchBar.value.trim().length === 0) {
+                 displayMessage('Server list loaded.', 'success');
+            } else if (servers.length > 0 && filteredServers.length > 0 && searchBar.value.trim().length > 0) {
+                 displayMessage(`Found ${filteredServers.length} server(s) matching your search.`, 'success');
+            } else if (servers.length > 0 && filteredServers.length === 0 && searchBar.value.trim().length > 0) {
+                displayMessage('No servers match your search.', 'info');
+            } else { // servers.length === 0
+                 displayMessage('Server list is currently empty. Submit a server to get started!', 'info');
+            }
 
         } catch (error) {
             console.error('Error fetching servers:', error);
             servers = [];
+            applySearch(); // Ensure filteredServers is also empty
             renderServers();
             displayMessage('Could not load server list. See console for details.', 'error');
         }
@@ -169,15 +179,16 @@ document.addEventListener('DOMContentLoaded', () => {
         serverTable.innerHTML = ''; // Clear existing rows
         serverTableHeader.innerHTML = ''; // Clear existing headers
 
+        // Determine which list to use: all servers or filtered servers
         const currentServerList = searchBar.value.trim() ? filteredServers : servers;
 
         if (!currentServerList || currentServerList.length === 0) {
             noServersMessage.style.display = 'block';
             serverTable.style.display = 'none';
             serverTableHeader.style.display = 'none';
-            if (searchBar.value.trim() && servers.length > 0) {
+            if (searchBar.value.trim() && servers.length > 0) { // Search active but no results from original list
                 noServersMessage.textContent = 'No servers match your search.';
-            } else {
+            } else { // No servers at all, or search is empty and no servers
                 noServersMessage.textContent = 'No servers listed yet. Be the first to submit one!';
             }
             return;
