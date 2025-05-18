@@ -96,14 +96,6 @@ button:hover {
     font-size: 0.9em;
 }
 
-footer {
-    text-align: center;
-    padding: 1rem;
-    background: #1e1e1e;
-    color: #fff;
-    margin-top: 2rem;
-}
-
 /* Message Styling */
 .info {
     color: #3498db; /* Light blue for info */
