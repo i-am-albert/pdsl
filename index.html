@@ -25,7 +25,7 @@
             <p id="form-message"></p>
         </section>
 
-        <section id="server-list-controls">
+        <section id="server-list-section">
             <h2>Server List</h2>
             <div id="search-bar-container">
                 <input type="text" id="search-bar" placeholder="Search servers...">
@@ -34,25 +34,28 @@
                 <h4>Show/Hide Columns:</h4>
                 <!-- Checkboxes will be dynamically inserted here by script.js -->
             </div>
-            <div>
+            <div id="export-buttons-container">
                 <button id="export-json">Export JSON</button>
                 <button id="export-csv">Export CSV</button>
                 <button id="export-txt">Export TXT</button>
             </div>
-        </section>
-
-        <section id="server-list-table-section">
-            <table id="server-table">
-                <thead>
-                    <!-- Table headers will be injected here by JavaScript -->
-                </thead>
-                <tbody>
-                    <!-- Server rows will be injected here by JavaScript -->
-                </tbody>
-            </table>
+            
+            <div class="table-container">
+                <table id="server-table">
+                    <thead>
+                        <!-- Table headers will be injected here by JavaScript -->
+                    </thead>
+                    <tbody>
+                        <!-- Server rows will be injected here by JavaScript -->
+                    </tbody>
+                </table>
+            </div>
             <p id="no-servers-message" style="display:none;">No servers listed yet. Be the first to submit one!</p>
         </section>
     </main>
+    <footer>
+        <p>Contact: <a href="https://einstein-coins.github.io/" target="_blank" rel="noopener noreferrer">https://einstein-coins.github.io/</a></p>
+    </footer>
     <script src="script.js"></script>
 </body>
 </html> 

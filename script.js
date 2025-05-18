@@ -97,7 +97,11 @@ document.addEventListener('DOMContentLoaded', () => {
             });
             const result = await response.json();
             if (response.ok && result.success) {
-                displayMessage(result.message || 'Server submitted successfully! It will be reviewed and added.', 'success');
+                // Use a more specific message from the worker if available, otherwise a generic one.
+                const successMessage = result.message && result.message.includes('submitted successfully') 
+                    ? result.message + ' It may take a few minutes to appear on the list.' 
+                    : 'Server submitted successfully! It may take a few minutes to appear on the list.';
+                displayMessage(successMessage, 'success');
                 inviteLinkInput.value = '';
                 fetchServers(); // This will call applySearch and renderServers indirectly
             } else {
@@ -205,7 +209,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 const th = document.createElement('th');
                 th.textContent = colConfig.label;
                 th.dataset.sortKey = key;
-                if (colConfig.type) { // Only allow sorting on columns with a defined type
+                th.classList.add(`col-${key.replace(/_/g, '-')}`); // Add class for styling th
+                if (colConfig.type) {
                     th.classList.add('sortable');
                     if (currentSort.key === key) {
                         th.classList.add(currentSort.direction === 'asc' ? 'sort-asc' : 'sort-desc');
@@ -225,6 +230,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (visibleColumns.has(key)) {
                     const colConfig = allColumns[key];
                     const cell = row.insertCell();
+                    cell.classList.add(`col-${key.replace(/_/g, '-')}`); // Add class for styling td
                     if (colConfig.render) {
                         cell.innerHTML = colConfig.render(server);
                     } else {
@@ -243,11 +249,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Sorting ---
     function handleSort(sortKey) {
+        const colType = allColumns[sortKey] ? allColumns[sortKey].type : null;
         if (currentSort.key === sortKey) {
             currentSort.direction = currentSort.direction === 'asc' ? 'desc' : 'asc';
         } else {
             currentSort.key = sortKey;
-            currentSort.direction = 'asc';
+            // For numbers or dates, default to descending on first click. Otherwise ascending.
+            if (colType === 'number' || colType === 'date') {
+                currentSort.direction = 'desc';
+            } else {
+                currentSort.direction = 'asc';
+            }
         }
         renderServers();
     }

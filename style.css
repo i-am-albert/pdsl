@@ -113,6 +113,11 @@ button:hover {
 }
 
 /* Table Styles */
+.table-container {
+    overflow-x: auto; /* Enable horizontal scrolling for the table wrapper */
+    width: 100%;
+}
+
 table {
     width: 100%;
     border-collapse: collapse;
@@ -125,11 +130,32 @@ thead {
 }
 
 th, td {
-    padding: 0.5rem 0.75rem; /* Adjusted padding */
-    border: 1px solid #383838; /* Slightly lighter border for table elements */
+    padding: 0.5rem 0.75rem;
+    border: 1px solid #383838;
     text-align: left;
     vertical-align: middle;
+    white-space: nowrap; /* Prevent headers and simple content from wrapping initially */
 }
+
+/* Allow description to wrap and control its width */
+td.col-description {
+    white-space: normal; /* Allow wrapping */
+    word-break: break-word; /* Break long words if necessary */
+    min-width: 200px; /* Minimum width for description */
+    max-width: 400px; /* Maximum width for description */
+}
+
+/* Suggested widths for other columns to help layout - adjust as needed */
+th.col-icon, td.col-icon { width: 50px; text-align: center; white-space: normal;}
+th.col-name, td.col-name { min-width: 150px; white-space: normal; word-break: break-word;}
+th.col-members, td.col-members { width: 80px; text-align: right; }
+th.col-online, td.col-online { width: 80px; text-align: right; }
+th.col-date-added, td.col-date-added { width: 100px; text-align: right;}
+th.col-join, td.col-join { width: 70px; text-align: center;}
+th.col-boosts, td.col-boosts { width: 70px; text-align: right; }
+th.col-verification, td.col-verification { width: 80px; text-align: right;}
+th.col-nsfw, td.col-nsfw { width: 60px; text-align: center;}
+th.col-nsfw-level, td.col-nsfw-level { width: 80px; text-align: right;}
 
 th.sortable {
     cursor: pointer;
@@ -179,11 +205,12 @@ th.sort-desc::after {
 
 /* Column Visibility Controls */
 #column-visibility-controls {
-    padding: 0.5rem;
+    padding: 0.75rem; /* Slightly more padding */
     margin-bottom: 1rem;
-    background-color: #252525;
-    border: 1px solid #333;
+    /* background-color: #252525; /* Removing distinct background */
+    /* border: 1px solid #333;    /* Removing distinct border */
     border-radius: 4px;
+    border: 1px dashed #444; /* Softer, dashed border to indicate it's a control group */
 }
 
 #column-visibility-controls h4 {
@@ -207,7 +234,31 @@ th.sort-desc::after {
 
 /* Ensure sections are distinct */
 #submission-form,
-#server-list-controls,
-#server-list-table-section {
-    padding: 1.5rem; /* Slightly more padding for main sections */
+/* #server-list-controls, /* This ID is removed */
+#server-list-table-section, /* This ID is removed */
+#server-list-section {
+    padding: 1.5rem;
+}
+
+/* New Footer Styles */
+footer {
+    text-align: center;
+    padding: 1.5rem;
+    margin-top: 2rem;
+    font-size: 0.9em;
+    color: #aaa; /* Lighter gray for footer text */
+    border-top: 1px solid #333; /* Subtle separator line */
+}
+
+footer p {
+    margin: 0;
+}
+
+footer a {
+    color: #00aaff; /* Link color to match other accents */
+    text-decoration: none;
+}
+
+footer a:hover {
+    text-decoration: underline;
 } 
